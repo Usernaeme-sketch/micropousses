@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Micro Pousses</title>
+<meta name="description" content="Suivi de culture de micro-pousses">
+<meta name="theme-color" content="#3d6b3f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MicroPousses">
+<link rel="manifest" href="./manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5f0e8;
+    --dark: #1a1a14;
+    --green: #3d6b3f;
+    --green-light: #6a9e5e;
+    --green-pale: #c8dfc2;
+    --earth: #8b6f4e;
+    --accent: #e8a030;
+    --text: #2c2c1e;
+    --text-muted: #7a7a60;
+    --stage-germination: #5a9e6f;
+    --stage-obscurite: #4a5568;
+    --stage-lumiere: #e8a030;
+    --stage-recolte: #c0392b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--cream); color: var(--text);
+    font-family: 'DM Sans', sans-serif; min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 10% 20%, rgba(106,158,94,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(139,111,78,0.06) 0%, transparent 50%);
+    padding-bottom: 30px;
+  }
+  header {
+    padding: 2.5rem 2rem 1.5rem;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 1px solid rgba(61,107,63,0.15);
+    max-width: 960px; margin: 0 auto;
+  }
+  .logo { display: flex; align-items: center; gap: 0.75rem; }
+  .logo-icon { width: 42px; height: 42px; }
+  h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--dark); letter-spacing: -0.5px; }
+  h1 span { color: var(--green); font-style: italic; }
+  .subtitle { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+  main { max-width: 960px; margin: 0 auto; padding: 2rem 2rem 2rem; }
+
+  /* INSTALL BANNER */
+  .install-banner {
+    background: var(--green); color: white; border-radius: 12px;
+    padding: 0.9rem 1.2rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    font-size: 0.85rem;
+  }
+  .install-banner .btn-install { background: white; color: var(--green); border: none; padding: 0.4rem 1rem; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .install-banner .btn-dismiss { background: transparent; border: none; color: rgba(255,255,255,0.7); font-size: 1.2rem; cursor: pointer; padding: 0 0.2rem; }
+
+  /* TODAY */
+  .today-panel { background: var(--dark); color: var(--cream); border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 2rem; position: relative; overflow: hidden; }
+  .today-panel::before { content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(106,158,94,0.15); }
+  .today-label { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-pale); margin-bottom: 0.5rem; }
+  .today-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 1rem; }
+  .today-tasks { display: flex; flex-direction: column; gap: 0.5rem; }
+  .today-task { display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.07); padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.9rem; }
+  .today-task .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .no-tasks { color: rgba(245,240,232,0.5); font-style: italic; font-size: 0.9rem; }
+
+  /* SECTION */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--dark); }
+  .btn-add { background: var(--green); color: white; border: none; padding: 0.6rem 1.4rem; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }
+  .btn-add:hover { background: var(--green-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(61,107,63,0.3); }
+
+  /* GRID */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+
+  /* CARD */
+  .card { background: white; border-radius: 14px; padding: 1.4rem; border: 1px solid rgba(61,107,63,0.1); transition: all 0.25s; position: relative; overflow: hidden; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--stage-color, var(--green)); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+  .card-variety { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
+  .card-delete { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1rem; padding: 2px; line-height: 1; opacity: 0.4; transition: opacity 0.2s; }
+  .card-delete:hover { opacity: 1; color: #c0392b; }
+  .stage-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.7rem; border-radius: 50px; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.04em; margin-bottom: 1rem; color: white; }
+  .progress-bar { background: var(--green-pale); height: 4px; border-radius: 4px; margin-bottom: 0.75rem; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  .card-dates { display: flex; flex-direction: column; gap: 0.3rem; }
+  .date-row { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); }
+  .date-row.next { color: var(--earth); font-weight: 500; }
+  .date-row.delivery { color: var(--green); font-weight: 600; font-size: 0.82rem; }
+  .card-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
+  .btn-action { flex: 1; border: 1px solid rgba(61,107,63,0.2); color: var(--green); padding: 0.5rem 0.3rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: center; background: rgba(61,107,63,0.06); }
+  .btn-action:hover { background: var(--green); color: white; border-color: var(--green); }
+  .btn-action.ics { background: rgba(232,160,48,0.08); border-color: rgba(232,160,48,0.3); color: var(--accent); }
+  .btn-action.ics:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* DONE */
+  .done-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
+  .card-done { background: rgba(255,255,255,0.5); border-radius: 12px; padding: 1rem 1.2rem; border: 1px dashed rgba(61,107,63,0.2); opacity: 0.65; }
+  .card-done .variety { font-weight: 600; font-size: 0.9rem; }
+  .card-done .done-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(26,26,20,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--cream); border-radius: 20px; padding: 2rem; width: min(500px, 94vw); transform: translateY(12px); transition: transform 0.25s; max-height: 92vh; overflow-y: auto; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 1.25rem; }
+  .field { margin-bottom: 1rem; }
+  label { display: block; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; }
+  input, select { width: 100%; padding: 0.7rem 1rem; border: 1.5px solid rgba(61,107,63,0.2); border-radius: 10px; background: white; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--text); outline: none; transition: border-color 0.2s; }
+  input:focus, select:focus { border-color: var(--green); }
+
+  /* MODE TABS */
+  .mode-tabs { display: flex; margin-bottom: 1.25rem; border: 1.5px solid rgba(61,107,63,0.2); border-radius: 10px; overflow: hidden; }
+  .mode-tab { flex: 1; padding: 0.6rem 0.4rem; text-align: center; font-size: 0.8rem; font-weight: 500; cursor: pointer; background: white; border: none; font-family: 'DM Sans', sans-serif; color: var(--text-muted); transition: all 0.2s; }
+  .mode-tab.active { background: var(--green); color: white; }
+
+  /* REVERSE CALC */
+  .calc-box { background: rgba(61,107,63,0.06); border: 1px solid rgba(61,107,63,0.15); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+  .calc-result { font-size: 0.88rem; color: var(--green); font-weight: 600; margin-top: 0.6rem; min-height: 1.4em; }
+
+  /* PRESET PILLS */
+  .preset-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+  .pill { padding: 0.3rem 0.85rem; border-radius: 50px; border: 1.5px solid rgba(61,107,63,0.25); background: white; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; color: var(--text); }
+  .pill:hover { border-color: var(--green); color: var(--green); }
+  .pill.active { background: var(--green); color: white; border-color: var(--green); }
+  .hint { font-size: 0.74rem; color: var(--text-muted); font-style: italic; }
+
+  .stages-config { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+  .stage-input-group label { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem; }
+  .stage-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .divider { border: none; border-top: 1px solid rgba(61,107,63,0.12); margin: 1rem 0; }
+  .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+  .btn-cancel { flex: 1; padding: 0.75rem; border: 1.5px solid rgba(61,107,63,0.2); border-radius: 10px; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+  .btn-cancel:hover { background: rgba(0,0,0,0.04); }
+  .btn-confirm { flex: 2; padding: 0.75rem; border: none; border-radius: 10px; background: var(--green); color: white; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-confirm:hover { background: var(--green-light); }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+  .empty-state p { font-size: 0.9rem; margin-top: 0.5rem; }
+
+  @media (max-width: 600px) {
+    header { padding: 1.5rem 1rem 1rem; }
+    main { padding: 1.5rem 1rem 2rem; }
+    h1 { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 42 42" fill="none">
+      <circle cx="21" cy="21" r="20" fill="#3d6b3f" opacity="0.1"/>
+      <path d="M21 34 C21 34 10 26 10 18 C10 13 15 8 21 10 C27 8 32 13 32 18 C32 26 21 34 21 34Z" fill="#3d6b3f" opacity="0.3"/>
+      <path d="M21 34 C21 20 25 14 30 10" stroke="#3d6b3f" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M21 34 C21 22 17 16 12 12" stroke="#6a9e5e" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="21" cy="34" r="2" fill="#8b6f4e"/>
+    </svg>
+    <div>
+      <h1>Micro<span>Pousses</span></h1>
+      <div class="subtitle">Suivi de culture</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="install-banner" id="install-banner" style="display:none">
+    <span>📲 Installer l'appli sur cet écran</span>
+    <div style="display:flex;gap:0.5rem;align-items:center">
+      <button class="btn-install" onclick="installApp()">Installer</button>
+      <button class="btn-dismiss" onclick="document.getElementById('install-banner').style.display='none'">✕</button>
+    </div>
+  </div>
+
+  <div class="today-panel">
+    <div class="today-label">📋 À faire aujourd'hui</div>
+    <div class="today-title" id="today-date"></div>
+    <div class="today-tasks" id="today-tasks"></div>
+  </div>
+
+  <div class="section-header">
+    <h2 class="section-title">Cultures en cours</h2>
+    <button class="btn-add" onclick="openModal()">+ Nouvelle pousse</button>
+  </div>
+  <div class="grid" id="active-grid"></div>
+
+  <div id="done-section" style="display:none">
+    <div class="section-header" style="margin-top:1rem">
+      <h2 class="section-title" style="font-size:1rem; color:var(--text-muted)">Récoltées récemment</h2>
+    </div>
+    <div class="done-grid" id="done-grid"></div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeIfOverlay(event)">
+  <div class="modal">
+    <h2>🌱 Nouvelle pousse</h2>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-semis" onclick="setMode('semis')">🌱 Je sème maintenant</button>
+      <button class="mode-tab" id="tab-livraison" onclick="setMode('livraison')">📦 Je planifie une livraison</button>
+    </div>
+
+    <div id="mode-semis">
+      <div class="field">
+        <label>Date de semis</label>
+        <input type="date" id="input-date-semis">
+      </div>
+    </div>
+
+    <div id="mode-livraison" style="display:none">
+      <div class="calc-box">
+        <label>Date de livraison souhaitée</label>
+        <input type="date" id="input-date-livraison" oninput="calcSowDate()">
+        <div class="calc-result" id="calc-result">← Choisissez une date de livraison</div>
+      </div>
+      <div class="field">
+        <label>Date de semis calculée</label>
+        <input type="date" id="input-date-semis-calc" readonly style="background:#f0f7f0;color:var(--green);font-weight:600;">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="field">
+      <label>Variété — Sélection rapide</label>
+      <div class="preset-pills" id="preset-pills"></div>
+      <p class="hint">Cliquez pour pré-remplir les durées automatiquement</p>
+    </div>
+
+    <div class="field">
+      <label>Nom de la variété</label>
+      <input type="text" id="input-variety" placeholder="Nom de la plante…">
+    </div>
+
+    <label style="margin-bottom:0.75rem;display:block">Durées par étape (jours) — modifiables</label>
+    <div class="stages-config">
+      <div class="stage-input-group">
+        <label><span class="stage-dot" style="background:#5a9e6f"></span>Germination</label>
+        <input type="number" id="d-germination" value="3" min="1" max="30" oninput="calcSowDate()">
+      </div>
+      <div class="stage-input-group">
+        <label><span class="stage-dot" style="background:#4a5568"></span>Obscurité</label>
+        <input type="number" id="d-obscurite" value="4" min="0" max="30" oninput="calcSowDate()">
+      </div>
+      <div class="stage-input-group">
+        <label><span class="stage-dot" style="background:#e8a030"></span>Lumière</label>
+        <input type="number" id="d-lumiere" value="5" min="1" max="30" oninput="calcSowDate()">
+      </div>
+      <div class="stage-input-group">
+        <label><span class="stage-dot" style="background:#c0392b"></span>Fenêtre récolte</label>
+        <input type="number" id="d-recolte" value="3" min="1" max="14" oninput="calcSowDate()">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-confirm" onclick="addPlant()">Créer la fiche</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PWA ─────────────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').style.display = 'none';
+});
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+}
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const DEFAULT_PRESETS = [
+  { name:'Tournesol',  emoji:'🌻', germination:2, obscurite:4, lumiere:6,  recolte:3 },
+  { name:'Radis',      emoji:'🌸', germination:2, obscurite:3, lumiere:5,  recolte:3 },
+  { name:'Brocoli',    emoji:'🥦', germination:2, obscurite:3, lumiere:5,  recolte:3 },
+  { name:'Pois',       emoji:'🫛', germination:3, obscurite:4, lumiere:7,  recolte:4 },
+  { name:'Basilic',    emoji:'🌿', germination:4, obscurite:3, lumiere:7,  recolte:4 },
+  { name:'Roquette',   emoji:'🥗', germination:2, obscurite:3, lumiere:5,  recolte:3 },
+  { name:'Chou rouge', emoji:'🟣', germination:2, obscurite:3, lumiere:5,  recolte:3 },
+  { name:'Moutarde',   emoji:'🌼', germination:2, obscurite:2, lumiere:4,  recolte:3 },
+  { name:'Lentille',   emoji:'🤎', germination:2, obscurite:2, lumiere:5,  recolte:3 },
+  { name:'Fenugrec',   emoji:'✨', germination:3, obscurite:3, lumiere:5,  recolte:3 },
+  { name:'Autre',      emoji:'🌱', germination:3, obscurite:3, lumiere:5,  recolte:3 },
+];
+
+// Presets are stored in localStorage so custom varieties and modified durations persist
+let PRESETS = JSON.parse(localStorage.getItem('micropousses_presets') || 'null') || DEFAULT_PRESETS;
+function savePresets() { localStorage.setItem('micropousses_presets', JSON.stringify(PRESETS)); }
+
+// Update or add a preset with latest durations used by Martial
+function upsertPreset(name, emoji, dur) {
+  const existing = PRESETS.find(p => p.name === name);
+  if (existing) {
+    existing.germination = dur.germination;
+    existing.obscurite   = dur.obscurite;
+    existing.lumiere     = dur.lumiere;
+    existing.recolte     = dur.recolte;
+  } else {
+    // Insert before "Autre"
+    const autreIdx = PRESETS.findIndex(p => p.name === 'Autre');
+    const newPreset = { name, emoji: emoji||'🌱', germination:dur.germination, obscurite:dur.obscurite, lumiere:dur.lumiere, recolte:dur.recolte };
+    if (autreIdx >= 0) PRESETS.splice(autreIdx, 0, newPreset);
+    else PRESETS.push(newPreset);
+  }
+  savePresets();
+}
+
+const STAGES = ['germination','obscurite','lumiere','recolte'];
+const STAGE_LABELS = { germination:'Germination', obscurite:"Phase d'obscurité", lumiere:'Mise à la lumière', recolte:'Récolte !' };
+const STAGE_COLORS = { germination:'#5a9e6f', obscurite:'#4a5568', lumiere:'#e8a030', recolte:'#c0392b' };
+const STAGE_ICONS  = { germination:'🌱', obscurite:'🌑', lumiere:'☀️', recolte:'✂️' };
+
+let plants = JSON.parse(localStorage.getItem('micropousses_v3') || '[]');
+const save = () => localStorage.setItem('micropousses_v3', JSON.stringify(plants));
+
+// ─── DATES ───────────────────────────────────────────────────────────────────
+function today() { return new Date().toISOString().split('T')[0]; }
+function addDays(ds,n){ const d=new Date(ds); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
+function formatDate(ds){ return new Date(ds).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}); }
+function formatDateLong(ds){ return new Date(ds).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long'}); }
+function getStageStart(plant,idx){ let d=plant.sownDate; for(let i=0;i<idx;i++) d=addDays(d,plant.dur[STAGES[i]]); return d; }
+function getCurrentStage(plant){ const tod=today(); for(let i=STAGES.length-1;i>=0;i--) if(tod>=getStageStart(plant,i)) return i; return 0; }
+function getProgress(plant){
+  const si=getCurrentStage(plant); const total=STAGES.reduce((s,k)=>s+plant.dur[k],0);
+  let done=0; for(let i=0;i<si;i++) done+=plant.dur[STAGES[i]];
+  const elapsed=Math.max(0,(new Date(today())-new Date(getStageStart(plant,si)))/86400000);
+  done+=Math.min(elapsed,plant.dur[STAGES[si]]);
+  return {stage:si,pct:Math.min(100,Math.round((done/total)*100))};
+}
+function isDone(plant){ return plant.harvested || today()>addDays(getStageStart(plant,3),plant.dur.recolte); }
+
+// ─── REVERSE CALC ─────────────────────────────────────────────────────────────
+let currentMode='semis';
+function setMode(mode){
+  currentMode=mode;
+  document.getElementById('tab-semis').classList.toggle('active',mode==='semis');
+  document.getElementById('tab-livraison').classList.toggle('active',mode==='livraison');
+  document.getElementById('mode-semis').style.display=mode==='semis'?'':'none';
+  document.getElementById('mode-livraison').style.display=mode==='livraison'?'':'none';
+  if(mode==='livraison') calcSowDate();
+}
+function getDurations(){ return { germination:parseInt(document.getElementById('d-germination').value)||3, obscurite:parseInt(document.getElementById('d-obscurite').value)||4, lumiere:parseInt(document.getElementById('d-lumiere').value)||5, recolte:parseInt(document.getElementById('d-recolte').value)||3 }; }
+function calcSowDate(){
+  if(currentMode!=='livraison') return;
+  const deliveryDate=document.getElementById('input-date-livraison').value;
+  const dur=getDurations(); const total=Object.values(dur).reduce((a,b)=>a+b,0);
+  const el=document.getElementById('calc-result'); const inp=document.getElementById('input-date-semis-calc');
+  if(!deliveryDate){ el.textContent='← Choisissez une date de livraison'; inp.value=''; return; }
+  const sowDate=addDays(deliveryDate,-total); inp.value=sowDate;
+  const daysFromNow=Math.ceil((new Date(sowDate)-new Date(today()))/86400000);
+  if(daysFromNow<0){ el.textContent=`⚠️ Il fallait semer il y a ${Math.abs(daysFromNow)} jours`; el.style.color='#c0392b'; }
+  else if(daysFromNow===0){ el.textContent=`✅ Semer aujourd'hui !`; el.style.color='var(--green)'; }
+  else { el.textContent=`🗓️ Semer le ${formatDateLong(sowDate)} (dans ${daysFromNow}j)`; el.style.color='var(--green)'; }
+}
+
+// ─── ICS (universel : Google, Apple, Outlook) ─────────────────────────────────
+function generateICS(id){
+  const plant=plants.find(p=>p.id===id); if(!plant) return;
+  const msgs={
+    germination:`Arroser légèrement\\, maintenir humide sous couverture.`,
+    obscurite:`Couvrir le plateau pour stimuler la croissance.`,
+    lumiere:`Découvrir et placer face à la lumière.`,
+    recolte:`Couper juste au-dessus du substrat et déguster !`,
+  };
+  const now=new Date().toISOString().replace(/[-:.]/g,'').slice(0,15)+'Z';
+  const evts=STAGES.map((stage,i)=>{
+    const ds=getStageStart(plant,i).replace(/-/g,'');
+    const de=addDays(getStageStart(plant,i),1).replace(/-/g,'');
+    return [
+      'BEGIN:VEVENT',
+      `UID:mp-${plant.id}-${stage}@micropousses`,
+      `DTSTAMP:${now}`,
+      `DTSTART;VALUE=DATE:${ds}`,
+      `DTEND;VALUE=DATE:${de}`,
+      `SUMMARY:${STAGE_ICONS[stage]} ${plant.variety} - ${STAGE_LABELS[stage]}`,
+      `DESCRIPTION:${plant.variety}\\n${msgs[stage]}`,
+      'BEGIN:VALARM',
+      'TRIGGER:-PT0S',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:${STAGE_ICONS[stage]} ${plant.variety} - ${STAGE_LABELS[stage]}`,
+      'END:VALARM',
+      'END:VEVENT'
+    ].join('\r\n');
+  }).join('\r\n');
+
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//MicroPousses//FR','CALSCALE:GREGORIAN','METHOD:PUBLISH',`X-WR-CALNAME:${plant.variety}`,evts,'END:VCALENDAR'].join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar;charset=utf-8'}));
+  a.download=`rappels-${plant.variety.toLowerCase().replace(/\s+/g,'-')}.ics`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render(){
+  const tod=today();
+  const ts=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('today-date').textContent=ts[0].toUpperCase()+ts.slice(1);
+  const tasks=[];
+  plants.filter(p=>!isDone(p)).forEach(plant=>{
+    STAGES.forEach((stage,i)=>{ if(getStageStart(plant,i)===tod) tasks.push({plant:plant.variety,stage}); });
+  });
+  document.getElementById('today-tasks').innerHTML=tasks.length===0
+    ?'<div class="no-tasks">Aucune action pour aujourd\'hui 🌿</div>'
+    :tasks.map(t=>`<div class="today-task"><span class="dot" style="background:${STAGE_COLORS[t.stage]}"></span><span>${STAGE_ICONS[t.stage]} <strong>${t.plant}</strong> — ${STAGE_LABELS[t.stage]}</span></div>`).join('');
+
+  const active=plants.filter(p=>!isDone(p));
+  const done=plants.filter(p=>isDone(p));
+  document.getElementById('active-grid').innerHTML=active.length===0
+    ?`<div style="grid-column:1/-1"><div class="empty-state"><div style="font-size:2.5rem">🌱</div><p>Aucune culture en cours.<br>Lance-toi avec une nouvelle pousse !</p></div></div>`
+    :active.map(plant=>{
+      const {stage,pct}=getProgress(plant); const sn=STAGES[stage]; const col=STAGE_COLORS[sn];
+      const harvestDate=getStageStart(plant,3);
+      const daysLeft=Math.ceil((new Date(harvestDate)-new Date(tod))/86400000);
+      const ni=stage+1;
+      const nextLine=ni<STAGES.length?`<div class="date-row next"><span>→ ${STAGE_ICONS[STAGES[ni]]} ${STAGE_LABELS[STAGES[ni]]}</span><span>${formatDate(getStageStart(plant,ni))}</span></div>`:'';
+      const delivLine=plant.deliveryDate?`<div class="date-row delivery"><span>📦 Livraison</span><span>${formatDate(plant.deliveryDate)}</span></div>`:'';
+      return `<div class="card" style="--stage-color:${col}">
+        <div class="card-top"><div class="card-variety">${plant.emoji||'🌱'} ${plant.variety}</div><button class="card-delete" onclick="deletePlant('${plant.id}')">✕</button></div>
+        <div class="stage-badge" style="background:${col}">${STAGE_ICONS[sn]} ${STAGE_LABELS[sn]}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div>
+        <div class="card-dates">
+          <div class="date-row"><span>🌱 Semées</span><span>${formatDate(plant.sownDate)}</span></div>
+          ${nextLine}
+          <div class="date-row"><span>✂️ Récolte</span><span>${daysLeft>0?`dans ${daysLeft}j (${formatDate(harvestDate)})`:'maintenant !'}</span></div>
+          ${delivLine}
+        </div>
+        <div class="card-actions">
+          <button class="btn-action ics" onclick="generateICS('${plant.id}')">📅 Rappels agenda</button>
+          <button class="btn-action" onclick="markHarvested('${plant.id}')">Récoltées ✓</button>
+        </div>
+      </div>`;
+    }).join('');
+
+  const ds=document.getElementById('done-section'); ds.style.display=done.length>0?'':'none';
+  document.getElementById('done-grid').innerHTML=done.slice(-6).reverse().map(p=>
+    `<div class="card-done"><div class="variety">✓ ${p.variety}</div><div class="done-date">Semées le ${formatDate(p.sownDate)}</div></div>`
+  ).join('');
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+function buildPills(){
+  const sorted = [...PRESETS].sort((a,b) => {
+    if(a.name==='Autre') return 1;
+    if(b.name==='Autre') return -1;
+    return a.name.localeCompare(b.name, 'fr');
+  });
+  document.getElementById('preset-pills').innerHTML=sorted.map(p=>
+    `<button class="pill" onclick="applyPreset('${p.name}',this)">${p.emoji} ${p.name}</button>`
+  ).join('');
+}
+buildPills();
+
+function applyPreset(name,el){
+  const p=PRESETS.find(x=>x.name===name); if(!p) return;
+  document.getElementById('input-variety').value=name==='Autre'?'':name;
+  document.getElementById('d-germination').value=p.germination;
+  document.getElementById('d-obscurite').value=p.obscurite;
+  document.getElementById('d-lumiere').value=p.lumiere;
+  document.getElementById('d-recolte').value=p.recolte;
+  document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active'); calcSowDate();
+  if(name==='Autre') document.getElementById('input-variety').focus();
+}
+function openModal(){
+  currentMode='semis'; setMode('semis');
+  document.getElementById('input-variety').value='';
+  document.getElementById('input-date-semis').value=today();
+  document.getElementById('input-date-livraison').value='';
+  document.getElementById('input-date-semis-calc').value='';
+  document.getElementById('calc-result').textContent='← Choisissez une date de livraison';
+  document.getElementById('calc-result').style.color='var(--green)';
+  document.getElementById('d-germination').value=3;
+  document.getElementById('d-obscurite').value=4;
+  document.getElementById('d-lumiere').value=5;
+  document.getElementById('d-recolte').value=3;
+  document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
+function closeIfOverlay(e){ if(e.target.id==='modal-overlay') closeModal(); }
+function addPlant(){
+  const variety=document.getElementById('input-variety').value.trim();
+  if(!variety){ alert('Merci de saisir la variété.'); return; }
+  const dur=getDurations();
+  let sownDate,deliveryDate;
+  if(currentMode==='semis'){
+    sownDate=document.getElementById('input-date-semis').value;
+    if(!sownDate){ alert('Merci de saisir la date de semis.'); return; }
+  } else {
+    sownDate=document.getElementById('input-date-semis-calc').value;
+    deliveryDate=document.getElementById('input-date-livraison').value;
+    if(!sownDate){ alert('Merci de saisir une date de livraison valide.'); return; }
+  }
+  const preset=PRESETS.find(p=>p.name===variety);
+  const emoji=preset?preset.emoji:'🌱';
+  // Save durations back to presets (creates new variety or updates existing ones)
+  if(variety!=='Autre') upsertPreset(variety, emoji, dur);
+  plants.push({ id:Date.now().toString(), variety, emoji, sownDate, deliveryDate:deliveryDate||null, dur, harvested:false });
+  save(); buildPills(); closeModal(); render();
+}
+function deletePlant(id){ if(confirm('Supprimer cette fiche ?')){ plants=plants.filter(p=>p.id!==id); save(); render(); } }
+function markHarvested(id){ const p=plants.find(p=>p.id===id); if(p){p.harvested=true;save();render();} }
+
+render();
+</script>
+</body>
+</html>
